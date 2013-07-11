@@ -39,25 +39,29 @@ sub _connect {
   return __PACKAGE__->instance(connect_info => \@connect_info);
 }
 
-{
-  my %Handles;
+my %Handles;
 
-  sub instance {
-    my $class = shift;
-    my %args = @_;
-    my $connect_info = $args{connect_info};
+# This is the caching bit -- if we already have a proxy handle for this
+# DSN/user/pass combo then return it. If we don't, then make one up and
+# save it for later.
+# The connector itself will handle reinitializing the DB connection if
+# the PID or TID changes, so we don't need to clear the cache ourself
+# in that case.
+sub instance {
+  my $class = shift;
+  my %args = @_;
+  my $connect_info = $args{connect_info};
 
-    # DSN, user, pass. Same as Apache::DBI.
-    my $key = join $;, @{$connect_info}[0..2];
-    if (!$Handles{$key}) {
-      my $self = {};
-      tie %$self, 'DBIx::ConnectVia::Connector::TieHandle', @_;
-      bless $self, $class;
-      $Handles{$key} = $self;
-    }
-
-    return $Handles{$key};
+  # DSN, user, pass. Same as Apache::DBI.
+  my $key = join $;, @{$connect_info}[0..2];
+  if (!$Handles{$key}) {
+    my $self = {};
+    tie %$self, 'DBIx::ConnectVia::Connector::TieHandle', @_;
+    bless $self, $class;
+    $Handles{$key} = $self;
   }
+
+  return $Handles{$key};
 }
 
 sub connector {
