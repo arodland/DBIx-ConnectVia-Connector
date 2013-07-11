@@ -5,10 +5,16 @@ install_author_deps: |
     dzil authordeps | cpanm --notest -L local
 
 build: |
-    dzil listdeps | cpanm --notest -L local
+    exec dzil listdeps | cpanm --notest -L local
 
 test: |
-    dzil test
+    exec dzil test
+
+release_test: |
+    RELEASE_TESTING=1 exec dzil test
 
 prove: |
-    dzil run prove ${ROCK_ARGV}
+    exec dzil run prove ${ROCK_ARGV}
+
+dzil: |
+    exec dzil ${ROCK_ARGV}
